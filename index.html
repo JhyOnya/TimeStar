@@ -88,8 +88,21 @@ button{font-family:inherit;cursor:pointer}
 textarea{font-family:inherit}
 
 .app{
-  max-width:560px;margin:0 auto;
-  padding:0 18px calc(108px + env(safe-area-inset-bottom));
+  padding:0 28px calc(158px + env(safe-area-inset-bottom));   /* 底部固定栈：小程序提示 + Tab 栏 */
+}
+
+/* 底部固定栈：提示语紧贴三按钮上方，位置恒定 */
+.bottom-stack{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:30;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  width:min(calc(100% - 32px),348px);
+  pointer-events:none;                    /* 空白区不挡内容点击 */
+}
+.bottom-stack > *{pointer-events:auto}
+.mp-hint{
+  text-align:center;
+  font-size:11.5px;color:var(--ink-2);
+  letter-spacing:.05em;
 }
 
 /* ================= 顶栏 ================= */
@@ -119,6 +132,18 @@ textarea{font-family:inherit}
 .page{display:none}
 .page.active{display:block;animation:fadeUp .28s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* 宽屏：内容页统一窄列居中（记录/月历/设置），只有全景画布全宽 */
+@media (min-width: 760px) {
+  #page-record,
+  #page-settings,
+  .cal-toolbar,
+  #month-view {
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
 
 /* ================= 首页 · 日期区 ================= */
 .date-hero{padding:18px 4px 16px}
@@ -316,7 +341,8 @@ textarea{font-family:inherit}
 
 /* 日历 · 视图切换 */
 .cal-toolbar{
-  display:flex;justify-content:flex-end;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:8px;
   padding:14px 0 12px;
 }
 .seg{
@@ -336,7 +362,6 @@ textarea{font-family:inherit}
 /* 全景视图 */
 .g-tools{
   display:flex;align-items:center;gap:8px;
-  margin-bottom:10px;
 }
 .g-tools button{
   width:36px;height:36px;border-radius:12px;
@@ -359,26 +384,26 @@ textarea{font-family:inherit}
   border:1px solid var(--line);border-radius:20px;
   touch-action:pan-x pan-y;
   overscroll-behavior:contain;
+  display:flex;
+  scrollbar-gutter:stable;   /* 预留竖滚动条槽，避免出现纵向滚动后挤出版面横向滚动条 */
 }
-.g-sizer{position:relative}
+.g-sizer{position:relative;flex:none;margin:auto}
 .g-canvas{
-  transform-origin:0 0;
   padding:18px;
   display:flex;flex-direction:column;gap:22px;
-  width:max-content;
+  transform-origin:0 0;
 }
 .g-row{
-  display:flex;gap:16px;align-items:flex-start;
-  width:max-content;
+  display:grid;gap:16px;align-items:start;
 }
 .g-year{
-  padding:10px 14px 10px 2px;margin-right:4px;
+  grid-column:1/-1;
+  padding:2px 2px 0;margin:0 0 -6px;
   font-family:var(--font-serif);
   font-size:20px;font-weight:800;color:var(--ink-2);
-  align-self:center;flex:none;
 }
 .g-month{
-  width:420px;flex:none;
+  min-width:0;
   background:var(--card);border:1px solid var(--line);
   border-radius:14px;padding:12px;
   box-shadow:0 2px 10px rgba(96,74,42,.05);
@@ -388,10 +413,6 @@ textarea{font-family:inherit}
   font-size:14px;font-weight:700;letter-spacing:.08em;
   padding:2px 2px 8px;margin-bottom:6px;
   border-bottom:1px dashed var(--line);
-}
-.g-empty{
-  font-size:11px;color:var(--ink-2);
-  text-align:center;padding:16px 0;letter-spacing:.1em;
 }
 .g-day{
   display:flex;gap:9px;
@@ -425,7 +446,10 @@ textarea{font-family:inherit}
 .g-line{
   display:flex;gap:6px;
   font-size:12.5px;line-height:1.38;
+  cursor:pointer;border-radius:6px;
+  padding:1px 3px;margin:0 -3px;
 }
+.g-line:hover{background:var(--accent-soft)}
 .g-star{
   font-size:10px;flex:none;padding-top:3px;
 }
@@ -438,10 +462,31 @@ textarea{font-family:inherit}
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
-.g-tip{
-  margin-top:10px;text-align:center;
-  font-size:11.5px;color:var(--ink-2);letter-spacing:.04em;
+.g-hint{
+  margin-left:auto;                        /* 工具行右端 */
+  font-size:11.5px;color:var(--ink-2);letter-spacing:.04em;white-space:nowrap;
 }
+@media (max-width: 520px){
+  .g-hint{display:none}                    /* 窄屏放不下且触屏无需滚轮提示 */
+}
+/* 全景就地快编 */
+.g-day.sel{background:var(--accent-soft)}
+.g-day.flash{animation:gflash .9s}
+@keyframes gflash{from{background:var(--accent-soft)}to{background:transparent}}
+.g-quick{
+  display:flex;flex-direction:column;gap:6px;
+  margin:4px 0 6px 29px;padding:8px;
+  background:var(--card-2);border:1px solid var(--accent);border-radius:10px;
+}
+.g-quick textarea{
+  width:100%;min-height:44px;max-height:220px;
+  background:var(--card);border:1px solid var(--line);border-radius:8px;
+  padding:6px 8px;font-size:12.5px;line-height:1.5;color:var(--ink);
+  outline:none;resize:none;caret-color:var(--accent);
+}
+.g-quick-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.g-quick-act{margin-left:auto;display:flex;gap:6px}
+.g-quick .add-mood{width:28px;height:24px;font-size:12px;padding:0}
 
 /* 日 · 详情 */
 .day-detail{margin-top:14px;padding:16px 16px 14px}
@@ -494,6 +539,17 @@ textarea{font-family:inherit}
   margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);
   display:flex;flex-direction:column;gap:10px;
 }
+.detail-add-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.detail-add-btn{flex:none}
+.add-mood-row{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0}
+.add-mood{
+  width:34px;height:30px;border-radius:9px;
+  border:1px solid var(--line);background:var(--card-2);
+  font-size:15px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .12s,background .12s;
+}
+.add-mood.on{border-color:var(--accent);background:var(--accent-soft)}
 .detail-add textarea{
   width:100%;min-height:64px;max-height:260px;
   background:var(--card-2);border:1px solid var(--line);border-radius:12px;
@@ -561,9 +617,7 @@ textarea{font-family:inherit}
 
 /* ================= 底部导航 ================= */
 .tabbar{
-  position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
-  z-index:30;
-  width:min(calc(100% - 32px),348px);
+  width:100%;                              /* 位于 bottom-stack 内，宽度随栈 */
   display:flex;gap:4px;padding:6px;
   background:var(--bg-blur);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
@@ -584,7 +638,7 @@ textarea{font-family:inherit}
 /* ================= Toast ================= */
 .toast{
   position:fixed;left:50%;
-  bottom:calc(104px + env(safe-area-inset-bottom));
+  bottom:calc(138px + env(safe-area-inset-bottom));
   transform:translate(-50%,16px);
   background:#2c251b;color:#fff;
   padding:11px 20px;border-radius:99px;
@@ -620,6 +674,21 @@ textarea{font-family:inherit}
 .modal-body{font-size:14px;color:var(--ink-2);line-height:1.7;margin-bottom:18px}
 .modal-actions{display:flex;gap:10px}
 .modal-actions .btn{flex:1;padding:11px 0}
+
+/* 大屏拉高（置于样式表末尾以保证覆盖）：编辑框更高、月历撑满剩余屏高 */
+@media (min-width: 760px) and (min-height: 860px) {
+  #input{ min-height: clamp(180px, 34dvh, 420px); max-height: none; }
+  #month-view{
+    min-height: min(calc(100dvh - 270px), 960px);
+    display: flex; flex-direction: column;
+  }
+  #month-view .cal-head,
+  #month-view .cal-week{ flex: none; }
+  #month-view .cal-grid{ flex: 1 1 290px; min-height: 290px; max-height: 480px; grid-auto-rows: 1fr; }
+  #month-view .day-detail{ flex: none; }   /* 内容自适应高度：多记录不截断溢出 */
+  .cal-cell{ height: auto; }
+  .detail-add textarea{ min-height: 120px; }
+}
 </style>
 </head>
 <body>
@@ -640,14 +709,13 @@ textarea{font-family:inherit}
         <div class="date-big" id="date-big"></div>
         <div class="date-sub" id="date-sub"></div>
       </div>
-
       <div class="card editor-card">
         <textarea id="input" maxlength="10000"
           placeholder="此刻想说点什么…&#10;一件开心的小事、一句吐槽、一个念头，都值得记下"></textarea>
         <div class="mood-row" id="mood-row"></div>
         <div class="editor-foot">
           <span class="char-count" id="char-count">0 字</span>
-          <button class="btn btn-primary save-btn" id="save-btn">记下这一笔 ✍️</button>
+          <button class="btn btn-primary save-btn" id="save-btn">记下这一笔</button>
         </div>
       </div>
 
@@ -661,6 +729,13 @@ textarea{font-family:inherit}
           <button type="button" class="seg-btn on" data-view="month">📅 月历</button>
           <button type="button" class="seg-btn" data-view="global">🗺 全景</button>
         </div>
+        <div class="g-tools hidden">
+          <button id="gz-out" aria-label="缩小">−</button>
+          <button id="gz-fit">适屏</button>
+          <button id="gz-in" aria-label="放大">＋</button>
+          <span id="gz-val">100%</span>
+        </div>
+        <span class="g-hint hidden">双指 / Ctrl+滚轮缩放</span>
       </div>
 
       <div id="month-view">
@@ -678,18 +753,11 @@ textarea{font-family:inherit}
       </div>
 
       <div id="global-view" class="hidden">
-        <div class="g-tools">
-          <button id="gz-out" aria-label="缩小">−</button>
-          <button id="gz-fit">适屏</button>
-          <button id="gz-in" aria-label="放大">＋</button>
-          <span id="gz-val">100%</span>
-        </div>
         <div class="g-viewport" id="g-viewport">
           <div class="g-sizer" id="g-sizer">
             <div class="g-canvas" id="g-canvas"></div>
           </div>
         </div>
-        <p class="g-tip">双指 / Ctrl+滚轮缩放 · 点击日记进入当天 · 横向滑动浏览整年 · 多年多排</p>
       </div>
     </section>
 
@@ -725,10 +793,9 @@ textarea{font-family:inherit}
           备份为 CSV 明文，可用 Excel / WPS 直接打开。
         </p>
         <div class="btn-row">
-          <button class="btn btn-primary" id="btn-export-json">导出备份 CSV</button>
-          <button class="btn btn-ghost" id="btn-export-md">导出 Markdown</button>
+          <button class="btn btn-primary" id="btn-export-json">导出备份</button>
+          <button class="btn btn-ghost" id="btn-import">导入备份</button>
         </div>
-        <button class="btn btn-ghost btn-block" id="btn-import">导入备份</button>
       </div>
 
       <div class="card set-card">
@@ -751,8 +818,10 @@ textarea{font-family:inherit}
 
   </main>
 
-  <!-- 底部导航 -->
-  <nav class="tabbar">
+  <!-- 底部固定栈：小程序提示 + 三按钮导航（位置恒定，内容区为其留白） -->
+  <div class="bottom-stack">
+    <footer class="mp-hint">手机上微信搜索「时星手记」小程序 · 数据可互导</footer>
+    <nav class="tabbar">
     <button class="tab on" data-tab="record" aria-label="记录">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
       记录
@@ -765,7 +834,8 @@ textarea{font-family:inherit}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="15" cy="7" r="2.4"/><circle cx="9" cy="12" r="2.4"/><circle cx="17" cy="17" r="2.4"/></svg>
       设置
     </button>
-  </nav>
+    </nav>
+  </div>
 
 </div>
 
@@ -795,14 +865,14 @@ const MOOD_NAMES = {'😊':'开心','🥰':'幸福','😌':'平静','😐':'平�
 /* 旧版天气表情（已停用）：存量数据统计仍计入，导出/导入保持文字兼容 */
 const LEGACY_MOOD_NAMES = {'☀️':'晴','🌤':'多云','🌧':'雨','🌙':'夜'};
 /* 心情配色：全景星星 & 心情分布数字同步使用 */
-const MOOD_COLORS = {
-  '😊':'#e0a83e',  // 开心 · 金黄
-  '🥰':'#e2707a',  // 幸福 · 粉红
-  '😌':'#7ba889',  // 平静 · 绿
-  '😐':'#a39a8c',  // 平淡 · 灰褐
-  '🥱':'#8f9fb3',  // 疲惫 · 灰蓝
+const MOOD_COLORS = {   // 与小程序版统一（避开主题色：橙/砖红/绿）
+  '😊':'#dfa73e',  // 开心 · 金黄（未选心情时的星星默认色同此）
+  '🥰':'#dc6e94',  // 幸福 · 玫粉
+  '😌':'#3f9d9b',  // 平静 · 青碧
+  '😐':'#a09a90',  // 平淡 · 暖灰
+  '🥱':'#8fa0b8',  // 疲惫 · 灰蓝
   '😰':'#a97fc0',  // 焦虑 · 紫
-  '😤':'#cd7d6f',  // 烦躁 · 暖红
+  '😤':'#b04a6e',  // 烦躁 · 酒红
   '😢':'#6e93c9'   // 难过 · 蓝
 };
 
@@ -816,7 +886,9 @@ const state = {
   detailDrafts: {},                       // 日历详情草稿（按日期隔离，切换不串）
   detailEdit: null,                       // 正在编辑的条目 {ds, idx} | null
   calView: 'month',                       // 日历页视图：month | global
-  gZoom: 1, gMin: 0.3, gMax: 3,           // 全景画布缩放
+  gEdit: null,                            // 全景就地编辑锚 {ds, idx} | null
+  gZoom: 1, gMin: 0.05, gMax: 3,           // 全景缩放：驱动 6/4/3/2/1 列重排（最小 2×6），档外等比缩放
+  detailMood: '',                          // 日历补记选中的心情
   sessionQuote: ''                       // 每日一句（每次打开随机）
 };
 
@@ -1001,7 +1073,7 @@ function renderMood() {
 }
 function saveEntry() {
   const t = $('#input').value.trim();
-  if (!t) { toast('先写点什么吧 ✍️'); return; }
+  if (!t) { toast('先写点什么吧'); return; }
   addEntry(todayStr(), t, state.mood);
   $('#input').value = '';
   state.mood = '';
@@ -1010,7 +1082,7 @@ function saveEntry() {
   autoGrow($('#input'));
   updateCount();
   refreshAll();
-  toast('已记下 ✍️');
+  toast('已记下');
 }
 function renderToday() {
   const d = new Date();
@@ -1023,7 +1095,7 @@ function renderToday() {
   box.innerHTML = '';
   const list = data.entries[todayStr()] || [];
   if (!list.length) {
-    box.append(h('div', 'today-empty', '今天还是一张白纸，写下第一句吧 ☝️'));
+    box.append(h('div', 'today-empty', '今天还是一张白纸，写下第一句吧'));
     return;
   }
   const head = h('div', 'sec-head');
@@ -1159,6 +1231,7 @@ function renderCal() {
     }
     cell.onclick = () => {
       state.selDate = str;
+      state.detailMood = '';
       if (other) {
         state.view = { y: cd.getFullYear(), m: cd.getMonth() };
       }
@@ -1183,14 +1256,14 @@ function renderDayDetail() {
   head.append(h('div', 'detail-date',
     (d.getMonth() + 1) + '月' + d.getDate() + '日 · 星期' + weekCN(d)));
   if (ds === tds) head.append(h('span', 'pill-today', '今天'));
-  if (future) head.append(h('span', 'pill-future', '📮 未来'));
+  if (future) head.append(h('span', 'pill-future', '未来'));
   if (list.length) head.append(h('div', 'detail-count', list.length + ' 笔'));
   box.append(head);
 
   if (!list.length) {
     box.append(h('div', 'detail-empty',
-      future ? '这天还没到，可以先留句话 📮'
-        : ds === tds ? '今天还没记录，去首页写一句吧 ✍️'
+      future ? '这天还没到，可以先留句话'
+        : ds === tds ? '今天还没记录'
         : '这一天还是空白'));
   } else {
     const wrap = h('div', 'detail-entries');
@@ -1212,21 +1285,38 @@ function renderDayDetail() {
     ta.style.height = Math.min(ta.scrollHeight, 260) + 'px';
   };
   add.append(ta);
-  const btn = h('button', 'btn btn-primary btn-sm',
-    future ? '记个备忘 📮' : ds === tds ? '追加一笔' : '补记一笔');
+  /* 操作行：心情选择（左） + 按钮（右） */
+  const rowEl = h('div', 'detail-add-row');
+  const moodsEl = h('div', 'add-mood-row');
+  MOODS.forEach(m => {
+    const b = h('button', 'add-mood' + (state.detailMood === m ? ' on' : ''), m);
+    b.type = 'button';
+    b.title = MOOD_NAMES[m];
+    b.onclick = () => {
+      state.detailMood = state.detailMood === m ? '' : m;
+      moodsEl.querySelectorAll('.add-mood').forEach(x =>
+        x.classList.toggle('on', x.textContent === state.detailMood));
+    };
+    moodsEl.append(b);
+  });
+  rowEl.append(moodsEl);
+  const btn = h('button', 'btn btn-primary btn-sm detail-add-btn',
+    future ? '记个备忘' : ds === tds ? '追加一笔' : '补记一笔');
   btn.onclick = detailSave;
-  add.append(btn);
+  rowEl.append(btn);
+  add.append(rowEl);
   box.append(add);
 }
 function detailSave() {
   const ta = $('#detail-input');
   const t = ta.value.trim();
-  if (!t) { toast('先写点什么吧 ✍️'); return; }
+  if (!t) { toast('先写点什么吧'); return; }
   const future = isFutureDS(state.selDate);
-  addEntry(state.selDate, t, '');
+  addEntry(state.selDate, t, state.detailMood);
+  state.detailMood = '';
   state.detailDrafts[state.selDate] = '';
   refreshAll();
-  toast(future ? '已记下备忘 📮' : '已补上这一笔 ✍️');
+  toast(future ? '已记下备忘' : '已补上这一笔');
 }
 
 /* ================= 全景视图 ================= */
@@ -1236,15 +1326,27 @@ function switchCalView(v) {
     b.classList.toggle('on', b.dataset.view === v));
   $('#month-view').classList.toggle('hidden', v !== 'month');
   $('#global-view').classList.toggle('hidden', v !== 'global');
+  $('.g-tools').classList.toggle('hidden', v !== 'global');
+  $('.g-hint').classList.toggle('hidden', v !== 'global');
   if (v === 'global') {
-    gBounds();
-    state.gZoom = Math.min(Math.max(state.gZoom, state.gMin), state.gMax);
     renderGlobal();
+    sizeGViewport();
     applyZoom();
     focusCurrentMonth();
   }
 }
-/* 全部年份：数据中出现的年份 ∪ 当前年（校验合法性，多年多排，最新年在上） */
+/* 全景视口高度：铺满剩余屏幕（大屏不再只占上方一截，下方留白） */
+function sizeGViewport() {
+  const vp = $('#g-viewport');
+  if (!vp) return;
+  const barB = document.querySelector('.topbar').getBoundingClientRect().bottom;
+  const top = Math.max(vp.getBoundingClientRect().top, barB);
+  const stack = document.querySelector('.bottom-stack');     // 底部固定栈（提示 + Tab 栏）
+  const bottomH = stack ? Math.max(0, window.innerHeight - stack.getBoundingClientRect().top) : 84;
+  vp.style.maxHeight = 'none';
+  vp.style.height = Math.max(380, window.innerHeight - top - bottomH - 14) + 'px';
+}
+/* 全部年份：数据中出现的年份 ∪ 当前年（校验合法性，多年多排，从上往下从旧到新） */
 function globalYears() {
   const cy = new Date().getFullYear();
   const years = new Set([cy]);
@@ -1252,7 +1354,7 @@ function globalYears() {
     const y = +String(ds).slice(0, 4);
     if (y >= 1900 && y <= 2999) years.add(y);
   });
-  return [...years].sort((a, b) => b - a);   // 降序：最新年第一排
+  return [...years].sort((a, b) => a - b);   // 升序：从上往下从旧到新
 }
 function renderGlobal() {
   const canvas = $('#g-canvas');
@@ -1286,44 +1388,156 @@ function monthDays(y, m) {
 function gMonthCard(y, m) {
   const c = h('div', 'g-month');
   c.append(h('div', 'g-m-title', (m + 1) + '月'));
-  const days = monthDays(y, m);
-  if (!days.length) {
-    c.append(h('div', 'g-empty', '空白'));
-    return c;
-  }
   const tds = todayStr();
-  days.forEach(({ d, str, list }) => {
+  const dim = new Date(y, m + 1, 0).getDate();
+  const pre = y + '-' + String(m + 1).padStart(2, '0');
+  /* 无记录日期也每天占一行（空行），不合并罗列 */
+  for (let d = 1; d <= dim; d++) {
+    const str = pre + '-' + String(d).padStart(2, '0');
+    const list = (data.entries[str] || []).filter(x => x && (x.text || x.mood || x.time));
     const dow = new Date(str + 'T00:00:00').getDay();   // 0=周日 6=周六
     const cls = 'g-day' +
       (str === tds ? ' today' : '') +
       (str > tds ? ' future' : '') +          // 未来备忘：灰色
       (dow === 6 ? ' sat' : '') +
-      (dow === 0 ? ' sun' : '');
+      (dow === 0 ? ' sun' : '') +
+      (list.length ? '' : ' blank');
     const day = h('div', cls);
+    day.dataset.ds = str;
     day.append(h('span', 'g-day-num', String(d)));
     const es = h('div', 'g-day-entries');
-    list.forEach(e => {
+    list.forEach((e, i) => {
       const line = h('div', 'g-line');
       const star = h('span', 'g-star', '✦');            // 小星星按心情着色
       star.style.color = MOOD_COLORS[e.mood] || MOOD_COLORS['😊'];
       line.append(star);
       if (e.mood) line.append(h('span', 'g-mood', e.mood));
       line.append(h('span', 'g-text', e.text || ''));
+      line.title = '点击修改这一笔';
+      line.onclick = ev => {                            // 就地改这一笔
+        ev.stopPropagation();
+        gQuickEdit(str, i, day);
+      };
       es.append(line);
     });
     day.append(es);
-    day.onclick = () => {
-      // 进入该天的月视图
-      state.selDate = str;
-      state.view = { y, m };
-      switchCalView('month');
-      renderCal();
-      renderDayDetail();
-      window.scrollTo({ top: 0 });
-    };
+    day.onclick = () => gQuickEdit(str, null, day);     // 点击行 = 就地补记（空白日同样可点）
     c.append(day);
-  });
+  }
   return c;
+}
+
+/* ---- 全景就地快编：点日期行/空白号 = 快速补记，点内容行 = 修改，全程不跳转 ---- */
+function gQuickEdit(ds, idx, anchor) {
+  gCollapseEdit();
+  const e = idx != null ? (data.entries[ds] || [])[idx] : null;
+  if (!e && idx != null) return;                      // 条目已不存在
+  const future = isFutureDS(ds);
+  let curMood = e ? (e.mood || '') : state.detailMood;
+
+  const box = h('div', 'g-quick');
+  const ta = document.createElement('textarea');
+  ta.maxLength = 10000;
+  ta.placeholder = future ? '给未来的这天留句话…'
+    : e ? '修改这一笔…' : '补记这一天的故事…';
+  ta.value = e ? e.text : (state.detailDrafts[ds] || '');
+  ta.oninput = () => {
+    if (!e) state.detailDrafts[ds] = ta.value;        // 新增模式：草稿按日期暂存（与月视图详情互通）
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 220) + 'px';
+  };
+  box.append(ta);
+
+  const row = h('div', 'g-quick-row');
+  const moods = h('div', 'add-mood-row');
+  MOODS.forEach(m => {
+    const b = h('button', 'add-mood' + (curMood === m ? ' on' : ''), m);
+    b.type = 'button';
+    b.title = MOOD_NAMES[m];
+    b.onclick = () => {
+      curMood = curMood === m ? '' : m;
+      if (!e) state.detailMood = curMood;
+      moods.querySelectorAll('.add-mood').forEach(x =>
+        x.classList.toggle('on', x.textContent === curMood));
+    };
+    moods.append(b);
+  });
+  row.append(moods);
+
+  const act = h('div', 'g-quick-act');
+  if (e) {                                            // 编辑模式才可删
+    const del = h('button', 'btn btn-danger btn-sm', '删除');
+    del.type = 'button';
+    del.onclick = ev => { ev.stopPropagation(); gCollapseEdit(); confirmDel(ds, idx); };
+    act.append(del);
+  }
+  const ok = h('button', 'btn btn-primary btn-sm', e ? '保存' : (future ? '记个备忘' : '补记一笔'));
+  ok.type = 'button';
+  ok.onclick = ev => {
+    ev.stopPropagation();
+    const t = ta.value.trim();
+    if (!t) { toast('先写点什么吧'); return; }
+    let msg;
+    if (e) { e.text = t; e.mood = curMood; save(); msg = '已保存'; }
+    else {
+      addEntry(ds, t, curMood);
+      state.detailMood = '';
+      state.detailDrafts[ds] = '';
+      msg = future ? '已记下备忘' : '已补上这一笔';
+    }
+    gAfterSave(ds);
+    toast(msg);
+  };
+  act.append(ok);
+  const no = h('button', 'btn btn-ghost btn-sm', '✕');
+  no.type = 'button';
+  no.title = '收起（Esc）';
+  no.onclick = ev => { ev.stopPropagation(); gCollapseEdit(); };
+  act.append(no);
+  row.append(act);
+  box.append(row);
+
+  anchor.after(box);
+  anchor.classList.add('sel');
+  ta.focus();
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 220) + 'px';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  ta.onkeydown = ev => {
+    if (ev.key === 'Escape') gCollapseEdit();
+    if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) ok.click();
+  };
+}
+
+function gCollapseEdit() {
+  const old = document.querySelector('.g-quick');
+  if (old) {
+    const sel = old.previousElementSibling;           // 锚行高亮
+    if (sel && sel.classList) sel.classList.remove('sel');
+    old.remove();
+  }
+  state.gEdit = null;
+}
+
+/* 保存后重绘全景：保持视口滚动，闪烁定位更新的行 */
+function gAfterSave(ds) {
+  const vp = $('#g-viewport');
+  const sl = vp.scrollLeft, st = vp.scrollTop;
+  gCollapseEdit();
+  renderGlobal();
+  requestAnimationFrame(() => {
+    vp.scrollLeft = sl;
+    vp.scrollTop = st;
+    const row = document.querySelector('.g-day[data-ds="' + ds + '"]');
+    if (row) {
+      row.classList.add('flash');
+      setTimeout(() => row.classList.remove('flash'), 900);
+    }
+  });
+  renderToday();
+  renderDayDetail();
+  renderSettings();
+  renderQuoteBadge();
 }
 /* 切到全景后定位到当前月 */
 function focusCurrentMonth() {
@@ -1334,45 +1548,40 @@ function focusCurrentMonth() {
   const cr = canvas.getBoundingClientRect();
   const mr = card.getBoundingClientRect();
   vp.scrollLeft = Math.max(0, (mr.left - cr.left) - 24);
-  const row = card.closest('.g-row');
-  if (row) {
-    const rr = row.getBoundingClientRect();
-    vp.scrollTop = Math.max(0, (rr.top - cr.top) - 16);
-  }
+  vp.scrollTop = Math.max(0, (mr.top - cr.top) - 16);   // 纵向也定位到月份卡（多列时同行的后段月份）
 }
-/* 缩放边界：最大缩放以"单月卡片不超出屏幕"为限（任何时候至少能看完整一个月） */
-const G_MONTH_OUT = 447;      // 月卡设计外宽（420 + padding/border + gap）
-function gBounds() {
-  const vp = $('#g-viewport');
-  const vw = vp.clientWidth - 16;
-  state.gMin = 0.3;
-  state.gMax = Math.max(0.4, Math.min(3, vw / G_MONTH_OUT));
+/* 全景缩放：类浏览器缩放 —— 版心始终铺满视口宽，缩放只改版心物理宽（L=W/z），
+ * 布局按版心宽取档位 6/4/3/2/1 列（行×列 12×1→6×2→4×3→3×4→2×6，最小 2×6），
+ * 缩小逐档重排、不出现烂尾行；到 2×6 后版心冻结（6×436px），布局不动整幅等比缩小。
+ * ±按钮直接跳档位边界（不档内空转）；捏合/Ctrl+滚轮连续微调。 */
+const G_COLW = 436;                    // 单列版心宽 = 卡片 420 + 列间距 16
+const G_DIVS = [6, 4, 3, 2, 1];        // 列数档位（最小布局 2×6，不设 1×12）
+function gLayout(z) {
+  const W = $('#g-viewport').clientWidth;
+  const L = Math.min(W / z, 6 * G_COLW);     // 2×6 之下版心冻结
+  const cols = G_DIVS.find(d => d * G_COLW <= L + 0.5) || 1;   // +0.5 容浮点误差
+  return { L, cols };
+}
+function setZoom(s) {
+  state.gZoom = Math.min(state.gMax, Math.max(state.gMin, s));
+  applyZoom();
 }
 function applyZoom() {
   const canvas = $('#g-canvas'), sizer = $('#g-sizer');
-  canvas.style.transform = 'scale(' + state.gZoom + ')';
-  sizer.style.width = canvas.offsetWidth * state.gZoom + 'px';
-  sizer.style.height = canvas.offsetHeight * state.gZoom + 'px';
-  $('#gz-val').textContent = Math.round(state.gZoom * 100) + '%';
-  $('#gz-in').disabled = state.gZoom >= state.gMax - 0.001;
-  $('#gz-out').disabled = state.gZoom <= state.gMin + 0.001;
+  const z = state.gZoom;
+  const { L, cols } = gLayout(z);
+  canvas.style.width = L + 'px';                        // 版心铺满视口（1×12 之下冻结）
+  canvas.querySelectorAll('.g-row').forEach(r =>
+    r.style.gridTemplateColumns = 'repeat(' + cols + ',minmax(0,1fr))');
+  canvas.style.transform = 'scale(' + z + ')';
+  sizer.style.width = canvas.offsetWidth * z + 'px';
+  sizer.style.height = canvas.offsetHeight * z + 'px';
+  $('#gz-val').textContent = Math.round(z * 100) + '%';
+  $('#gz-in').disabled = z >= state.gMax - 0.001;
+  $('#gz-out').disabled = z <= state.gMin + 0.001;
 }
-/* setZoom(z, ax, ay)：ax/ay 为缩放锚点（viewport 内坐标），保持该点内容不动 */
-function setZoom(z, ax, ay) {
-  const vp = $('#g-viewport');
-  z = Math.min(Math.max(z, state.gMin), state.gMax);
-  if (ax !== undefined && ay !== undefined) {
-    const z1 = state.gZoom;
-    const px = (vp.scrollLeft + ax) / z1;
-    const py = (vp.scrollTop + ay) / z1;
-    state.gZoom = z;
-    applyZoom();
-    vp.scrollLeft = px * z - ax;
-    vp.scrollTop = py * z - ay;
-  } else {
-    state.gZoom = z;
-    applyZoom();
-  }
+function zoomFit() {   // 适屏 = 12×1：单列满宽，逐日一行顺读（不再整年缩进一屏）
+  setZoom($('#g-viewport').clientWidth / G_COLW);
 }
 function bindGlobalGestures() {
   const vp = $('#g-viewport');
@@ -1394,24 +1603,28 @@ function bindGlobalGestures() {
       e.preventDefault();
       const a = e.touches[0], b = e.touches[1];
       const r = vp.getBoundingClientRect();
-      setZoom(pd.z * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) / pd.d,
-        pd.ax - r.left, pd.ay - r.top);
+      setZoom(pd.z * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) / pd.d);
     }
   }, { passive: false });
   vp.addEventListener('touchend', () => { pd = null; });
-  // 桌面 Ctrl + 滚轮缩放（锚点=光标）
+  // 桌面 Ctrl + 滚轮缩放
   vp.addEventListener('wheel', e => {
     if (!e.ctrlKey) return;
     e.preventDefault();
-    const r = vp.getBoundingClientRect();
-    setZoom(state.gZoom * (e.deltaY < 0 ? 1.12 : 0.89),
-      e.clientX - r.left, e.clientY - r.top);
+    setZoom(state.gZoom * (e.deltaY < 0 ? 1.12 : 0.89));
   }, { passive: false });
-  // 缩放按钮（锚点=视口中心）
-  const center = () => ({ x: vp.clientWidth / 2, y: vp.clientHeight / 2 });
-  $('#gz-in').onclick = () => { const c = center(); setZoom(state.gZoom + 0.2, c.x, c.y); };
-  $('#gz-out').onclick = () => { const c = center(); setZoom(state.gZoom - 0.2, c.x, c.y); };
-  $('#gz-fit').onclick = () => { const c = center(); setZoom(1, c.x, c.y); };
+  // 缩放按钮：直接跳到下一档位边界（布局逐档变化、档顶=当前布局文字最大化），
+  // 档位之外（2×6 之下 / 12×1 之上）等比步进
+  const gBoundsList = () => [6, 4, 3, 2].map(d => $('#g-viewport').clientWidth / (d * G_COLW));
+  $('#gz-in').onclick = () => {
+    const up = gBoundsList().filter(b => b > state.gZoom * 1.02).sort((a, b) => a - b)[0];
+    setZoom(up !== undefined ? up : state.gZoom * 1.2);
+  };
+  $('#gz-out').onclick = () => {
+    const dn = gBoundsList().filter(b => b < state.gZoom * 0.98).sort((a, b) => b - a)[0];
+    setZoom(dn !== undefined ? dn : state.gZoom * 0.85);
+  };
+  $('#gz-fit').onclick = () => zoomFit();
 }
 
 /* ================= 设置页 ================= */
@@ -1467,22 +1680,6 @@ function exportBackup() {
   download('时星手记_备份_' + stampFull() + '.csv',
     buildCSV(data), 'text/csv;charset=utf-8');
   toast('已导出备份 📤');
-}
-function exportMD() {
-  const days = Object.keys(data.entries).filter(k => data.entries[k].length).sort();
-  if (!days.length) { toast('还没有手记，先去写两句吧', 'err'); return; }
-  let s = '# 时星手记\n\n> 导出时间：' + nowCN() + ' · 共 ' + days.length + ' 天 ' + countEntries(data) + ' 笔\n';
-  days.forEach(ds => {
-    const d = parseDS(ds);
-    s += '\n## ' + ds + ' 星期' + weekCN(d) + '\n\n';
-    data.entries[ds].forEach(e => {
-      const line = (e.time ? e.time + ' ' : '') + (e.mood ? e.mood + ' ' : '') +
-        (e.text || '').replace(/\n/g, ' ');
-      s += '- ' + line + '\n';
-    });
-  });
-  download('时星手记_' + stampFull() + '.md', s, 'text/markdown;charset=utf-8');
-  toast('已导出 Markdown 📄');
 }
 /* ---------- CSV 备份（列：日期,时间,心情,内容；不存 ts） ---------- */
 function csvCell(v) {
@@ -1624,7 +1821,9 @@ function refreshAll() {
   renderDayDetail();
   renderSettings();
   renderQuoteBadge();
-  if (state.calView === 'global') { renderGlobal(); applyZoom(); }
+  if (state.calView === 'global') {
+    renderGlobal(); applyZoom();
+  }
 }
 
 /* ================= 事件绑定 & 初始化 ================= */
@@ -1708,7 +1907,7 @@ function init() {
   });
   bindGlobalGestures();
   window.addEventListener('resize', () => {
-    if (state.calView === 'global') { gBounds(); setZoom(state.gZoom); }
+    if (state.calView === 'global') { sizeGViewport(); applyZoom(); }
   });
 
   // 底部 Tab
@@ -1722,6 +1921,7 @@ function init() {
       if (state.tab === 'settings') renderSettings();
       if (state.tab === 'record') renderToday();
       window.scrollTo({ top: 0 });
+      if (state.tab === 'calendar' && state.calView === 'global') sizeGViewport();
     };
   });
 
@@ -1732,7 +1932,6 @@ function init() {
 
   // 设置 · 导入导出
   $('#btn-export-json').onclick = exportBackup;
-  $('#btn-export-md').onclick = exportMD;
   $('#btn-import').onclick = () => $('#import-file').click();
   $('#import-file').addEventListener('change', e => {
     const f = e.target.files[0];
